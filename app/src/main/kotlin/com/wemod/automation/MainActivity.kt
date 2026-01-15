@@ -2,24 +2,27 @@ package com.wemod.automation
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.activity.compose.setContent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.wemod.automation.ui.components.PermissionStatus
 import com.wemod.automation.ui.components.PermissionDialog
 import com.wemod.automation.ui.theme.WeModTheme
 import com.wemod.automation.utils.PermissionUtils
-import com.wemod.automation.core.AccessibilityManager  // 添加这个导入
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -53,13 +56,44 @@ fun HomeScreen() {
     var showPermissionDialog by remember { mutableStateOf(false) }
     var accessibilityEnabled by remember { mutableStateOf(false) }
     var overlayEnabled by remember { mutableStateOf(false) }
+    var overlayRunning by remember { mutableStateOf(false) }
+    var refreshCounter by remember { mutableStateOf(0) }
     
-    // 自动刷新权限状态
+    // 状态检查函数
+    fun checkAllStatus() {
+        accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(context)
+        overlayEnabled = PermissionUtils.canDrawOverlays(context)
+        overlayRunning = try {
+            com.wemod.automation.core.OverlayService.isRunning
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    // 自动刷新状态
     LaunchedEffect(Unit) {
         while (true) {
-            accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(context)
-            overlayEnabled = PermissionUtils.canDrawOverlays(context)
-            delay(2000)
+            checkAllStatus()
+            delay(1000)
+        }
+    }
+    
+    // 当应用回到前台时强制刷新
+    DisposableEffect(Unit) {
+        val activity = context as? androidx.activity.ComponentActivity
+        val lifecycle = activity?.lifecycle
+        
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshCounter++
+                checkAllStatus()
+            }
+        }
+        
+        lifecycle?.addObserver(observer)
+        
+        onDispose {
+            lifecycle?.removeObserver(observer)
         }
     }
     
@@ -99,10 +133,8 @@ fun HomeScreen() {
             overlayEnabled = overlayEnabled,
             onCheckPermissions = {
                 showPermissionDialog = true
-                // 立即更新状态
                 coroutineScope.launch {
-                    accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(context)
-                    overlayEnabled = PermissionUtils.canDrawOverlays(context)
+                    checkAllStatus()
                 }
             }
         )
@@ -122,7 +154,7 @@ fun HomeScreen() {
                 Text("权限设置")
             }
             
-            // 测试点击按钮（需要无障碍权限）
+            // 测试点击按钮
             Button(
                 onClick = {
                     if (accessibilityEnabled) {
@@ -137,7 +169,7 @@ fun HomeScreen() {
                 Text("测试点击 (500, 500)")
             }
             
-            // 测试滑动按钮（需要无障碍权限）
+            // 测试滑动按钮
             Button(
                 onClick = {
                     if (accessibilityEnabled) {
@@ -152,45 +184,100 @@ fun HomeScreen() {
                 Text("测试滑动 (300→700, 500)")
             }
             
-           // 更新悬浮窗按钮
-OutlinedButton(
-    onClick = {
-        if (overlayEnabled) {
-            if (com.wemod.automation.core.OverlayService.isRunning) {
-                com.wemod.automation.core.OverlayService.stop(context)
-                showToast(context, "悬浮窗已关闭")
-            } else {
-                com.wemod.automation.core.OverlayService.start(context)
-                showToast(context, "悬浮窗已启动")
+            // 悬浮窗按钮
+            OutlinedButton(
+                onClick = {
+                    if (overlayEnabled) {
+                        toggleOverlay(context, overlayRunning) { newStatus ->
+                            overlayRunning = newStatus
+                            refreshCounter++
+                        }
+                    } else {
+                        showToast(context, "请先开启悬浮窗权限")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = overlayEnabled
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 状态指示灯
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(
+                                color = if (overlayRunning) Color(0xFF4CAF50) else Color(0xFFF44336),
+                                shape = CircleShape
+                            )
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Text(
+                        text = if (overlayRunning) "关闭悬浮窗" else "显示悬浮窗"
+                    )
+                }
             }
-        } else {
-            showToast(context, "请先开启悬浮窗权限")
-        }
-    },
-    modifier = Modifier.fillMaxWidth(),
-    enabled = overlayEnabled
-) {
-    Text(
-        text = if (com.wemod.automation.core.OverlayService.isRunning) 
-            "关闭悬浮窗" 
-        else "显示悬浮窗"
-    )
-}
+            
+            // 手动刷新按钮
+            Button(
+                onClick = {
+                    refreshCounter++
+                    checkAllStatus()
+                    showToast(context, "已刷新状态")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text("手动刷新状态")
+            }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // 提示文本
-        Text(
-            text = if (accessibilityEnabled && overlayEnabled) 
-                "✅ 所有权限已开启，可以开始使用了！"
-            else "⚠️ 请先开启所有必要权限",
-            fontSize = 14.sp,
-            color = if (accessibilityEnabled && overlayEnabled) 
-                Color(0xFF4CAF50) 
-            else Color(0xFFFF9800),
-            textAlign = TextAlign.Center
-        )
+        // 状态显示区域
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "📊 当前状态",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 无障碍状态
+                StatusItem(
+                    label = "无障碍服务",
+                    enabled = accessibilityEnabled
+                )
+                
+                // 悬浮窗权限状态
+                StatusItem(
+                    label = "悬浮窗权限",
+                    enabled = overlayEnabled
+                )
+                
+                // 悬浮窗运行状态
+                StatusItem(
+                    label = "悬浮窗运行",
+                    enabled = overlayRunning
+                )
+            }
+        }
     }
     
     // 权限对话框
@@ -205,28 +292,75 @@ OutlinedButton(
     }
 }
 
+@Composable
+fun StatusItem(label: String, enabled: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(
+                        color = if (enabled) Color(0xFF4CAF50) else Color(0xFFF44336),
+                        shape = CircleShape
+                    )
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = if (enabled) "正常" else "未启用",
+                fontSize = 12.sp,
+                color = if (enabled) Color(0xFF4CAF50) else Color(0xFFF44336)
+            )
+        }
+    }
+}
+
 // 测试功能
 private fun testClick(context: Context) {
-    if (AccessibilityManager.isRunning()) {
-        showToast(context, "无障碍服务正在运行，可以执行点击")
-        // 暂时注释掉实际点击，先确保编译通过
-        // val success = AccessibilityManager.click(500, 500)
-        // val message = if (success) "点击测试已发送" else "点击测试失败"
-        // showToast(context, message)
+    if (com.wemod.automation.core.AccessibilityManager.isRunning()) {
+        val success = com.wemod.automation.core.AccessibilityManager.click(500, 500)
+        val message = if (success) "点击测试已发送" else "点击测试失败"
+        showToast(context, message)
     } else {
         showToast(context, "无障碍服务未运行，请先开启")
     }
 }
 
 private fun testSwipe(context: Context) {
-    if (AccessibilityManager.isRunning()) {
-        showToast(context, "无障碍服务正在运行，可以执行滑动")
-        //暂时注释掉实际滑动
-        val success = AccessibilityManager.swipe(300, 500, 700, 500, 500)
+    if (com.wemod.automation.core.AccessibilityManager.isRunning()) {
+        val success = com.wemod.automation.core.AccessibilityManager.swipe(300, 500, 700, 500, 500)
         val message = if (success) "滑动测试已发送" else "滑动测试失败"
         showToast(context, message)
     } else {
         showToast(context, "无障碍服务未运行，请先开启")
+    }
+}
+
+// 悬浮窗控制函数
+private fun toggleOverlay(context: Context, isRunning: Boolean, onStatusChanged: (Boolean) -> Unit) {
+    try {
+        if (isRunning) {
+            com.wemod.automation.core.OverlayService.stop(context)
+            showToast(context, "悬浮窗已关闭")
+            onStatusChanged(false)
+        } else {
+            com.wemod.automation.core.OverlayService.start(context)
+            showToast(context, "悬浮窗已启动")
+            onStatusChanged(true)
+        }
+    } catch (e: Exception) {
+        showToast(context, "操作失败: ${e.message}")
     }
 }
 

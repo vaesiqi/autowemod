@@ -23,6 +23,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ComposeEmptyActivity">
         
+    
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -49,11 +51,10 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
         <!-- 悬浮窗服务 -->
-        <service
-        android:name=".core.OverlayService"
-        android:enabled="true"
-    android:exported="false"
-    android:foregroundServiceType="dataSync"
-    android:permission="android.permission.FOREGROUND_SERVICE" />
+      <!-- 悬浮窗服务 - 改为普通服务 -->
+<service
+    android:name=".core.OverlayService"
+    android:enabled="true"
+    android:exported="false" />
     </application>
 </manifest>

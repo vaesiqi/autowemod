@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景圆形 -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#40000000" />
+        </shape>
+    </item>
+    
+    <!-- 对角线1 -->
+    <item>
+        <rotate android:fromDegrees="45">
+            <shape android:shape="rectangle">
+                <size android:width="2dp" android:height="20dp" />
+                <solid android:color="#FFFFFF" />
+            </shape>
+        </rotate>
+    </item>
+    
+    <!-- 对角线2 -->
+    <item>
+        <rotate android:fromDegrees="-45">
+            <shape android:shape="rectangle">
+                <size android:width="2dp" android:height="20dp" />
+                <solid android:color="#FFFFFF" />
+            </shape>
+        </rotate>
+    </item>
+</layer-list>
