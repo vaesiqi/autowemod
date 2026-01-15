@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WeMod自动化助手</string>
+    
+    <!-- 无障碍服务相关 -->
+    <string name="accessibility_service_label">WeMod自动化服务</string>
+    <string name="accessibility_service_desc">提供自动化点击、滑动等功能，用于游戏辅助和自动化操作</string>
+    
+    <!-- 主界面 -->
+    <string name="welcome_title">欢迎使用 WeMod 自动化助手</string>
+    <string name="welcome_subtitle">简单易用的安卓自动化工具</string>
+    
+    <!-- 权限相关 -->
+    <string name="permission_status_title">权限状态</string>
+    <string name="accessibility_service">无障碍服务</string>
+    <string name="overlay_permission">悬浮窗权限</string>
+    <string name="overlay_permission_desc">用于显示悬浮窗控制面板</string>
+    <string name="permission_instructions">提示：请按顺序开启权限。先开启悬浮窗权限，再开启无障碍服务。</string>
+    
+    <!-- 底部按钮 -->
+    <string name="btn_run_script">运行脚本</string>
+    <string name="btn_record">录制</string>
+    <string name="btn_settings">设置</string>
+    
+    <!-- 测试功能 -->
+    <string name="btn_test_click">测试点击</string>
+    <string name="btn_test_swipe">测试滑动</string>
+    <string name="btn_open_accessibility">开启无障碍</string>
+    <string name="btn_open_overlay">开启悬浮窗</string>
+</resources>
