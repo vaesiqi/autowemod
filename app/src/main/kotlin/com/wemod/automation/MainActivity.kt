@@ -152,16 +152,30 @@ fun HomeScreen() {
                 Text("测试滑动 (300→700, 500)")
             }
             
-            // 悬浮窗按钮（需要悬浮窗权限）
-            OutlinedButton(
-                onClick = {
-                    showToast(context, "悬浮窗功能开发中...")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = overlayEnabled
-            ) {
-                Text("显示悬浮窗")
+           // 更新悬浮窗按钮
+OutlinedButton(
+    onClick = {
+        if (overlayEnabled) {
+            if (com.wemod.automation.core.OverlayService.isRunning) {
+                com.wemod.automation.core.OverlayService.stop(context)
+                showToast(context, "悬浮窗已关闭")
+            } else {
+                com.wemod.automation.core.OverlayService.start(context)
+                showToast(context, "悬浮窗已启动")
             }
+        } else {
+            showToast(context, "请先开启悬浮窗权限")
+        }
+    },
+    modifier = Modifier.fillMaxWidth(),
+    enabled = overlayEnabled
+) {
+    Text(
+        text = if (com.wemod.automation.core.OverlayService.isRunning) 
+            "关闭悬浮窗" 
+        else "显示悬浮窗"
+    )
+}
         }
         
         Spacer(modifier = Modifier.height(24.dp))
