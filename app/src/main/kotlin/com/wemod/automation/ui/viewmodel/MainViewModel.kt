@@ -83,7 +83,11 @@ class MainViewModel(private val context: Context) : ViewModel() {
     /**
      * 创建示例脚本
      */
-    private fun createSampleScript() {
+     
+    
+// 修改后：
+internal fun createSampleScript() {
+    
         viewModelScope.launch {
             val sampleScript = Script.createSample()
             if (scriptRepository.saveScript(sampleScript)) {

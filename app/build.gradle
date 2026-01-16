@@ -45,4 +45,16 @@ dependencies {
     implementation libs.androidx.material3
     debugImplementation libs.androidx.ui.tooling
     debugImplementation libs.androidx.ui.test.manifest
+    // JSON序列化（必须添加）
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    
+    // ViewModel扩展函数
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    
+    // Material Icons Extended
+    implementation("androidx.compose.material:material-icons-extended:1.6.5")
+    
+    // 导航组件（解决'compose'错误）
+    implementation("androidx.navigation:navigation-compose:2.8.0")
+
 }

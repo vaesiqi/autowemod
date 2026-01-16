@@ -21,6 +21,9 @@ import com.wemod.automation.ui.components.PermissionStatus
 import com.wemod.automation.ui.viewmodel.MainViewModel
 import com.wemod.automation.utils.PermissionUtils
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun MainScreen(

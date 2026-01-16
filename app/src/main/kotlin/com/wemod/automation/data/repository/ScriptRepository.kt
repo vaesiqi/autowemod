@@ -6,7 +6,7 @@ import com.wemod.automation.model.Script
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-
+import kotlinx.serialization.decodeFromString
 /**
  * 脚本仓库 - 负责脚本的保存和加载
  */

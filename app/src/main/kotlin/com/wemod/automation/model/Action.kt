@@ -111,8 +111,13 @@ sealed class Action {
             )
         }
         
-        private fun generateId(): String {
-            return "action_${System.currentTimeMillis()}_${(0..1000).random()}"
-        }
+    // 修改前：private fun generateId(): String
+    // 修改后：
+    internal fun generateId(): String = UUID.randomUUID().toString().take(8)
+
+        
+        // private fun generateId(): String {
+            // return "action_${System.currentTimeMillis()}_${(0..1000).random()}"
+        // }
     }
 }
