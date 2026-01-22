@@ -1,0 +1,49 @@
+#!/bin/bash
+# AutoX-WeMod 代码合并脚本
+# 使用: 在项目根目录执行 ./merge_code.sh
+
+set -e  # 遇到错误停止执行
+
+echo "📁 AutoX-WeMod 代码合并开始..."
+echo "=============================="
+
+# 设置输出文件
+OUTPUT_FILE="wemod_code_sync_$(date +%Y%m%d_%H%M%S).txt"
+
+# 写入文件头
+cat > "$OUTPUT_FILE" << 'EOF'
+🎭 AutoX-WeMod 项目代码同步文件
+📅 生成时间: $(date)
+📁 项目根目录: $(pwd)
+
+=============================
+📋 文件清单
+=============================
+EOF
+
+# 查找所有Kotlin文件并记录
+echo "🔍 扫描Kotlin文件..."
+find . -name "*.kt" -type f | sort >> "$OUTPUT_FILE"
+
+echo "" >> "$OUTPUT_FILE"
+echo "=============================" >> "$OUTPUT_FILE"
+echo "📄 文件内容" >> "$OUTPUT_FILE"
+echo "=============================" >> "$OUTPUT_FILE"
+
+# 逐个文件添加内容
+find . -name "*.kt" -type f | sort | while read -r file; do
+    echo "" >> "$OUTPUT_FILE"
+    echo "=================================================================" >> "$OUTPUT_FILE"
+    echo "📄 文件: $file" >> "$OUTPUT_FILE"
+    echo "=================================================================" >> "$OUTPUT_FILE"
+    echo "" >> "$OUTPUT_FILE"
+    cat "$file" >> "$OUTPUT_FILE"
+    echo "✅ 已添加: $file"
+done
+
+echo ""
+echo "============================="
+echo "✅ 合并完成!"
+echo "📁 输出文件: $OUTPUT_FILE"
+echo "📊 总文件数: $(find . -name "*.kt" -type f | wc -l)"
+echo "💾 文件大小: $(du -h "$OUTPUT_FILE" | cut -f1)"

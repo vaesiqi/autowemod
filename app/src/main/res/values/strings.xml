@@ -27,4 +27,7 @@
     <string name="btn_test_swipe">测试滑动</string>
     <string name="btn_open_accessibility">开启无障碍</string>
     <string name="btn_open_overlay">开启悬浮窗</string>
+    <string name="overlay_zoom_in">放大</string>
+    <string name="overlay_zoom_out">缩小</string>
+    <string name="overlay_scale">缩放</string>
 </resources>

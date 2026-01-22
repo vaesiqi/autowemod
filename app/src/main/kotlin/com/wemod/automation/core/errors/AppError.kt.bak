@@ -1,0 +1,153 @@
+// 新建文件：app/src/main/kotlin/com/wemod/automation/core/errors/AppError.kt
+// ========================
+package com.wemod.automation.core.errors
+
+import kotlinx.serialization.Serializable
+
+/**
+ * 统一错误处理系统
+ */
+@Serializable
+sealed class AppError(
+    open val code: String,
+    open val message: String,
+    open val severity: ErrorSeverity
+) {
+    companion object {
+        fun fromThrowable(e: Throwable): AppError {
+            return when (e) {
+                is AppError -> e
+                else -> UnknownError(e.message ?: "未知错误")
+            }
+        }
+    }
+    
+    // ===== 权限错误 =====
+    @Serializable
+    data class PermissionDenied(
+        val permission: String,
+        override val message: String = "缺少权限: $permission",
+        override val severity: ErrorSeverity = ErrorSeverity.WARNING
+    ) : AppError("PERMISSION_DENIED", message, severity)
+    
+    @Serializable
+    data class AccessibilityServiceNotEnabled(
+        override val message: String = "无障碍服务未开启",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("ACCESSIBILITY_DISABLED", message, severity)
+    
+    // ===== 脚本错误 =====
+    @Serializable
+    data class ScriptNotFound(
+        val scriptId: String,
+        override val message: String = "脚本不存在: $scriptId",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("SCRIPT_NOT_FOUND", message, severity)
+    
+    @Serializable
+    data class ScriptExecutionFailed(
+        val scriptId: String,
+        val actionIndex: Int,
+        val actionName: String,
+        override val message: String = "脚本执行失败: $scriptId (动作$actionIndex: $actionName)",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("SCRIPT_EXECUTION_FAILED", message, severity)
+    
+    @Serializable
+    data class InvalidAction(
+        val actionType: String,
+        override val message: String = "无效的动作类型: $actionType",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("INVALID_ACTION", message, severity)
+    
+    // ===== 存储错误 =====
+    @Serializable
+    data class StorageError(
+        val operation: String,
+        val path: String? = null,
+        override val message: String = "存储操作失败: $operation${path?.let { " ($it)" } ?: ""}",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("STORAGE_ERROR", message, severity)
+    
+    @Serializable
+    data class SerializationError(
+        val dataType: String,
+        override val message: String = "序列化失败: $dataType",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("SERIALIZATION_ERROR", message, severity)
+    
+    // ===== 引擎错误 =====
+    @Serializable
+    data class EngineError(
+        val state: String,
+        override val message: String = "引擎状态错误: $state",
+        override val severity: ErrorSeverity = ErrorSeverity.ERROR
+    ) : AppError("ENGINE_ERROR", message, severity)
+    
+    @Serializable
+    data class ExecutionTimeout(
+        val timeoutMs: Long,
+        override val message: String = "执行超时: ${timeoutMs}ms",
+        override val severity: ErrorSeverity = ErrorSeverity.WARNING
+    ) : AppError("EXECUTION_TIMEOUT", message, severity)
+    
+    // ===== 网络错误 =====（为云同步准备）
+    @Serializable
+    data class NetworkError(
+        val operation: String,
+        override val message: String = "网络错误: $operation",
+        override val severity: ErrorSeverity = ErrorSeverity.WARNING
+    ) : AppError("NETWORK_ERROR", message, severity)
+    
+    // ===== 未知错误 =====
+    @Serializable
+    data class UnknownError(
+        val detail: String? = null,
+        override val message: String = "未知错误${detail?.let { ": $it" } ?: ""}",
+        override val severity: ErrorSeverity = ErrorSeverity.CRITICAL
+    ) : AppError("UNKNOWN_ERROR", message, severity)
+    
+    // ===== 验证错误 =====
+    @Serializable
+    data class ValidationError(
+        val field: String,
+        val reason: String,
+        override val message: String = "验证失败 [$field]: $reason",
+        override val severity: ErrorSeverity = ErrorSeverity.WARNING
+    ) : AppError("VALIDATION_ERROR", message, severity)
+}
+
+/**
+ * 错误严重级别
+ */
+@Serializable
+enum class ErrorSeverity {
+    INFO,       // 信息性消息
+    WARNING,    // 警告，可继续运行
+    ERROR,      // 错误，功能受影响
+    CRITICAL    // 严重错误，可能导致崩溃
+}
+
+/**
+ * 错误处理结果类型
+ */
+typealias AppResult<T> = Result<T, AppError>
+
+/**
+ * Result类型的扩展函数
+ */
+inline fun <T> AppResult<T>.onSuccess(block: (T) -> Unit): AppResult<T> {
+    if (this is Result.Success) block(value)
+    return this
+}
+
+inline fun <T> AppResult<T>.onFailure(block: (AppError) -> Unit): AppResult<T> {
+    if (this is Result.Failure) block(error)
+    return this
+}
+
+/**
+ * 快速创建成功/失败结果
+ */
+fun <T> success(value: T): AppResult<T> = Result.Success(value)
+fun <T> failure(error: AppError): AppResult<T> = Result.Failure(error)

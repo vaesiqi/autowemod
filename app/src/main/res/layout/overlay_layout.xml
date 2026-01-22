@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlayRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/overlay_background"
+    android:padding="0dp">
+
+    <!-- 主要内容区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#E8FFFFFF">
+
+        <!-- 拖拽区域（标题栏） -->
+        <LinearLayout
+            android:id="@+id/dragArea"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="#3F51B5"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
+            
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="WeMod 控制面板"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+                
+            <Button
+                android:id="@+id/btnClose"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:text="×"
+                android:textSize="20sp"
+                android:background="@android:color/transparent"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- 控制按钮区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:layout_marginTop="4dp">
+
+            <Button
+                android:id="@+id/btnTestClick"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="测试点击"
+                android:textSize="12sp"
+                android:layout_marginBottom="6dp" />
+
+            <Button
+                android:id="@+id/btnTestSwipe"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="测试滑动"
+                android:textSize="12sp"
+                android:layout_marginBottom="6dp" />
+
+            <Button
+                android:id="@+id/btnRecord"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="开始录制"
+                android:textSize="12sp"
+                android:layout_marginBottom="6dp" />
+
+            <Button
+                android:id="@+id/btnRunScript"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="运行脚本"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

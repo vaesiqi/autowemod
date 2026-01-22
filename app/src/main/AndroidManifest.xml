@@ -8,9 +8,9 @@
     
     <!-- 存储权限（可选，用于保存脚本） -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="34" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="34" />
     
     <!-- 前台服务数据同步权限（你已有的） -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -22,6 +22,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ComposeEmptyActivity">
+        
+        android:name=".WeModApplication"
+    
+    
+
+        <!-- 应用类（如果有的话） -->
+        <!-- <android:name=".WeModApplication" android:theme="@style/Theme.ComposeEmptyActivity" /> -->
         
         <activity
             android:name=".MainActivity"
@@ -35,9 +42,9 @@
             </intent-filter>
         </activity>
         
-        <!-- 无障碍服务声明 -->
+        <!-- ===== 关键修改：使用增强版无障碍服务 ===== -->
         <service
-            android:name=".core.AccessibilityService"
+            android:name=".core.accessibility.EnhancedAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
             android:label="@string/accessibility_service_label">
@@ -48,6 +55,13 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+        
+        <!-- ===== 悬浮窗服务 ===== -->
+        <service
+            android:name=".core.overlays.OverlayContainerService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.SYSTEM_ALERT_WINDOW" />
         
     </application>
 </manifest>

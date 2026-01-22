@@ -1,0 +1,89 @@
+#!/bin/bash
+# AutoX-WeMod 项目合并脚本
+# 用法：./merge_project.sh [输出文件名]
+
+# 设置输出文件名（可选参数）
+OUTPUT_FILE="${1:-wemod_project_full.txt}"
+PROJECT_ROOT="."  # 脚本应在项目根目录运行
+
+echo "🚀 开始合并 AutoX-WeMod 项目文件..."
+echo "输出文件：$OUTPUT_FILE"
+
+# 清空或创建输出文件
+> "$OUTPUT_FILE"
+
+# 写入头部信息
+echo "======================================================================" >> "$OUTPUT_FILE"
+echo "AutoX-WeMod 项目完整代码" >> "$OUTPUT_FILE"
+echo "生成时间：$(date)" >> "$OUTPUT_FILE"
+echo "项目路径：$(pwd)" >> "$OUTPUT_FILE"
+echo "======================================================================" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+# 函数：安全地添加文件内容
+add_file() {
+    local file="$1"
+    local relative_path="${file#$PROJECT_ROOT/}"
+    
+    if [[ -f "$file" ]]; then
+        echo "📄 添加：$relative_path"
+        echo "──────────────────────────────────────────────────────────────" >> "$OUTPUT_FILE"
+        echo "文件：$relative_path" >> "$OUTPUT_FILE"
+        echo "──────────────────────────────────────────────────────────────" >> "$OUTPUT_FILE"
+        cat "$file" >> "$OUTPUT_FILE"
+        echo "" >> "$OUTPUT_FILE"
+        echo "" >> "$OUTPUT_FILE"
+    else
+        echo "⚠️  文件不存在：$file"
+    fi
+}
+
+# 1. 项目配置文件
+echo "🔧 添加项目配置文件..."
+for config_file in \
+    "build.gradle.kts" \
+    "settings.gradle.kts" \
+    "gradle.properties" \
+    "app/build.gradle.kts"\
+    "gradle/libs.versions.toml"
+    do
+    if [[ -f "$config_file" ]]; then
+        add_file "$config_file"
+    fi
+done
+
+# 2. AndroidManifest.xml
+echo "📱 添加 AndroidManifest..."
+add_file "app/src/main/AndroidManifest.xml"
+
+# 3. Kotlin 源码文件
+echo "📁 添加 Kotlin 源码文件..."
+find app/src/main/kotlin -name "*.kt" | sort | while read kt_file; do
+    add_file "$kt_file"
+done
+
+# 4. 资源文件（简化版本）
+echo "🎨 添加关键资源文件..."
+for res_file in \
+    "app/src/main/res/values/strings.xml" \
+    "app/src/main/res/values/colors.xml" \
+    "app/src/main/res/values/themes.xml"
+do
+    if [[ -f "$res_file" ]]; then
+        add_file "$res_file"
+    fi
+done
+
+# 写入尾部信息
+echo "" >> "$OUTPUT_FILE"
+echo "======================================================================" >> "$OUTPUT_FILE"
+echo "文件合并完成" >> "$OUTPUT_FILE"
+echo "总文件数：$(find app/src/main/kotlin -name "*.kt" | wc -l) 个 .kt 文件" >> "$OUTPUT_FILE"
+echo "总配置数：7 个配置文件" >> "$OUTPUT_FILE"
+echo "======================================================================" >> "$OUTPUT_FILE"
+
+echo ""
+echo "✅ 项目合并完成！"
+echo "📊 输出文件：$OUTPUT_FILE"
+echo "📏 文件大小：$(du -h "$OUTPUT_FILE" | cut -f1)"
+echo "📈 行数统计：$(wc -l < "$OUTPUT_FILE") 行"
