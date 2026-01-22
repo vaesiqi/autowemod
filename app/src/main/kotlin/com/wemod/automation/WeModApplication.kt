@@ -1,13 +1,15 @@
+// 新建或修改 WeModApplication.kt
 package com.wemod.automation
 
 import android.app.Application
-import com.wemod.automation.ui.viewmodel.MainViewModel
+import com.wemod.automation.core.actions.ActionRegistry
 
 class WeModApplication : Application() {
-    
-    // 在这里可以初始化全局依赖，如数据库、网络等
     override fun onCreate() {
         super.onCreate()
-        // 可以在这里初始化全局组件
+        
+        // 初始化动作注册表
+        ActionRegistry.registerBuiltInActions()
+        android.util.Log.d("WeModApplication", "动作注册表初始化完成")
     }
 }

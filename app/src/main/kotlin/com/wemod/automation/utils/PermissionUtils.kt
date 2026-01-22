@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import androidx.core.content.ContextCompat
+import android.util.Log
 
 /**
  * 权限检查工具类
@@ -16,14 +17,12 @@ object PermissionUtils {
     
     /**
      * 检查无障碍服务是否已启用
-     * 这个函数需要准确匹配我们在 AndroidManifest.xml 中声明的服务路径
+     * 修复版：更健壮的服务检测逻辑
      */
     fun isAccessibilityServiceEnabled(context: Context): Boolean {
         return try {
-            val accessibilityManager = ContextCompat.getSystemService(
-                context, 
-                AccessibilityManager::class.java
-            ) ?: return false
+            val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+                ?: return false
             
             val enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(
                 AccessibilityServiceInfo.FEEDBACK_ALL_MASK
@@ -33,29 +32,44 @@ object PermissionUtils {
                 return false
             }
             
-            // 关键：这里要正确匹配服务ID
-            // 格式通常是：包名/服务类全名
+            // 服务ID格式通常是：包名/服务类全名
             val packageName = context.packageName
             val serviceName = "com.wemod.automation.core.AccessibilityService"
-            val expectedServiceId = "$packageName/$serviceName"
             
-            // 调试日志（可以在Logcat中查看）
-            android.util.Log.d("PermissionUtils", "期望的服务ID: $expectedServiceId")
+            // 多个可能的ID格式（适配不同Android版本）
+            val possibleServiceIds = listOf(
+                "$packageName/$serviceName",  // 标准格式
+                "$packageName/.core.AccessibilityService",  // 可能省略包名
+                serviceName,  // 可能只有类名
+                "com.wemod.automation/.core.AccessibilityService"  // 完整格式
+            )
+            
+            Log.d("PermissionUtils", "查找无障碍服务，包名: $packageName")
+            Log.d("PermissionUtils", "可能的服务ID: $possibleServiceIds")
             
             for (service in enabledServices) {
                 val serviceId = service.id
-                android.util.Log.d("PermissionUtils", "找到的服务: $serviceId")
+                Log.d("PermissionUtils", "找到的服务ID: $serviceId")
                 
-                // 检查是否匹配
+                // 检查是否匹配任何可能的ID格式
+                if (possibleServiceIds.any { serviceId.contains(it) || serviceId.endsWith(it) }) {
+                    Log.d("PermissionUtils", "找到匹配的无障碍服务")
+                    return true
+                }
+                
+                // 额外检查：服务是否包含我们的包名和AccessibilityService关键字
                 if (serviceId.contains(packageName) && 
-                    serviceId.contains("AccessibilityService")) {
+                    (serviceId.contains("AccessibilityService") || serviceId.contains("accessibility"))) {
+                    Log.d("PermissionUtils", "通过包名和关键字匹配到服务")
                     return true
                 }
             }
             
+            Log.d("PermissionUtils", "未找到匹配的无障碍服务")
             false
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e("PermissionUtils", "检查无障碍服务时出错: ${e.message}")
             false
         }
     }
@@ -82,6 +96,8 @@ object PermissionUtils {
             context.startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
+            // 备用方案：打开应用设置
+            openAppSettings(context)
         }
     }
     
@@ -100,6 +116,21 @@ object PermissionUtils {
                     putExtra("package", context.packageName)
                 }
             }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            openAppSettings(context)
+        }
+    }
+    
+    /**
+     * 打开应用设置页面（备用）
+     */
+    private fun openAppSettings(context: Context) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.parse("package:${context.packageName}")
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         } catch (e: Exception) {
